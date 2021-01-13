@@ -1,0 +1,193 @@
+
+```{r}
+#  Importing Craigslist Data 
+craigslis <- read.csv("~/Desktop/craigslist_spjoined_8_17.csv", sep = ",", header = TRUE, stringsAsFactors=FALSE)
+######################################
+###   Cross Sectional Metrics       ##
+######################################
+
+######### ListingsFreq_Cross ############
+library(reshape2)
+ListingsFreq_Cross <- melt(table(craigslis$CTID10),id.vars=c("craigslis$CTID10"))
+names(ListingsFreq_Cross)[1] <- 'CTID10'
+names(ListingsFreq_Cross)[2] <- 'ListingsFreq_Cross'
+
+############ About Price#################
+library(ggplot2)
+# Price
+options(digits = 9)
+summary(craigslis$price)
+# Plot for all price doesn't work, so I create density of price, which you can see there is a strange plot
+price_den <- ggplot(craigslis, aes(x = price))
+price_density <- price_den + geom_density() +
+  geom_vline(aes(xintercept = mean(price)), 
+             linetype = "dashed", color = "#FC4E07") 
+price_density
+# Plot with removing values greater than average
+high_price <- craigslis[craigslis$price > 61409,]
+clean_price <- craigslis[!craigslis$price %in% high_price$price,]
+summary(clean_price$price)
+cleanPrice <- ggplot(clean_price, aes(price)) + geom_histogram(binwidth = 100) +
+  scale_x_continuous("Price", limits = c(0,54100), breaks = c(0,5000,10000,15000,20000,30000,40000,50000)) + theme_bw()  
+cleanPrice
+## More Zoom
+cleanPrice2 <- ggplot(clean_price, aes(price)) + geom_histogram(binwidth = 20) + scale_x_continuous("Price", limits = c(0,5000), breaks = c(0,500,1000,1500,2000,2500,3000,3500,4000,5000)) + theme_bw()  
+cleanPrice2
+
+#############  MedianRent_Cross ################
+MedianRent_Cross <- aggregate(price ~ CTID10, data=craigslis, median)
+names(MedianRent_Cross)[2] <- 'MedianRent_Cross'
+# Merge both MedianRent_Cross and ListingsFreq_Cross 
+cross <- merge(ListingsFreq_Cross, MedianRent_Cross, by = "CTID10")
+
+
+#####################################
+###      Longitudinal Metrics      ##
+#####################################
+
+######### ListingsFreq_February ########
+feb <- craigslis[craigslis$month == 2,]
+ListingsFreq_Feb <- melt(table(feb$CTID10),id.vars=c("feb$CTID10"))
+names(ListingsFreq_Feb)[1] <- "CT_ID_10"
+names(ListingsFreq_Feb)[2] <- "ListingsFreq_Feb"
+
+######### ListingsFreq_March ########
+march <- craigslis[craigslis$month == 3,]
+ListingsFreq_Mar <- melt(table(march$CTID10),id.vars=c("march$CTID10"))
+names(ListingsFreq_Mar)[1] <- "CT_ID_10"
+names(ListingsFreq_Mar)[2] <- "ListingsFreq_Mar"
+
+#######	ListingsFreq_April #########
+april <- craigslis[craigslis$month == 4,]
+ListingsFreq_Apr <- melt(table(april$CTID10),id.vars=c("april$CTID10"))
+names(ListingsFreq_Apr)[1] <- "CT_ID_10"
+names(ListingsFreq_Apr)[2] <- "ListingsFreq_Apr"
+
+######	ListingsFreq_May ##########
+may <- craigslis[craigslis$month == 5,]
+ListingsFreq_May <- melt(table(may$CTID10),id.vars=c("mayl$CTID10"))
+names(ListingsFreq_May)[1] <- "CT_ID_10"
+names(ListingsFreq_May)[2] <- "ListingsFreq_May"
+
+###### ListingsFreq_June ##########
+june <- craigslis[craigslis$month == 6,]
+ListingsFreq_Jun <- melt(table(june$CTID10),id.vars=c("june$CTID10"))
+names(ListingsFreq_Jun)[1] <- "CT_ID_10"
+names(ListingsFreq_Jun)[2] <- "ListingsFreq_Jun"
+
+###### ListingsFreq_July ##########
+july <- craigslis[craigslis$month == 7,]
+ListingsFreq_Jul <- melt(table(july$CTID10),id.vars=c("july$CTID10"))
+names(ListingsFreq_Jul)[1] <- "CT_ID_10"
+names(ListingsFreq_Jul)[2] <- "ListingsFreq_Jul"
+
+###### ListingsFreq_August ##########
+august <- craigslis[craigslis$month == 8,]
+ListingsFreq_Aug <- melt(table(august$CTID10),id.vars=c("august$CTID10"))
+names(ListingsFreq_Aug)[1] <- "CT_ID_10"
+names(ListingsFreq_Aug)[2] <- "ListingsFreq_Aug"
+
+# Merging all months for listing frequency
+feb_march <- merge(ListingsFreq_Feb, ListingsFreq_Mar, by = "CT_ID_10", all = TRUE)
+april_may <- merge(ListingsFreq_Apr, ListingsFreq_May, by = "CT_ID_10", all = TRUE)
+june_july <- merge(ListingsFreq_Jun, ListingsFreq_Jul, by = "CT_ID_10", all = TRUE)
+feb_march_april_may <- merge(feb_march, april_may, by = "CT_ID_10", all = TRUE)
+feb_march_april_may_june_july <- merge(feb_march_april_may, june_july, by = "CT_ID_10", all = TRUE)
+all_months <- merge(feb_march_april_may_june_july, ListingsFreq_Aug, by = "CT_ID_10", all = TRUE)
+
+###### MedianRent_Feb #######
+feb <- craigslis[craigslis$month == 2,]
+MedianRent_Feb <- aggregate(price ~ CTID10, data=feb, median)
+names(MedianRent_Feb)[1] <- 'CT_ID_10'
+names(MedianRent_Feb)[2] <- 'MedianRent_Feb'
+
+###### MedianRent_March #####
+MedianRent_Mar <- aggregate(price ~ CTID10, data=march, median)
+names(MedianRent_Mar)[1] <- 'CT_ID_10'
+names(MedianRent_Mar)[2] <- 'MedianRent_Mar'
+
+###### MedianRent_April #####
+MedianRent_Apr <- aggregate(price ~ CTID10, data=april, median)
+names(MedianRent_Apr)[1] <- 'CT_ID_10'
+names(MedianRent_Apr)[2] <- 'MedianRent_Apr'
+
+###### MedianRent_May ######
+MedianRent_May <- aggregate(price ~ CTID10, data=may, median)
+names(MedianRent_May)[1] <- 'CT_ID_10'
+names(MedianRent_May)[2] <- 'MedianRent_May'
+
+###### MedianRent_June #####
+MedianRent_Jun <- aggregate(price ~ CTID10, data=june, median)
+names(MedianRent_Jun)[1] <- 'CT_ID_10'
+names(MedianRent_Jun)[2] <- 'MedianRent_Jun'
+
+###### MedianRent_July #####
+MedianRent_Jul <- aggregate(price ~ CTID10, data=july, median)
+names(MedianRent_Jul)[1] <- 'CT_ID_10'
+names(MedianRent_Jul)[2] <- 'MedianRent_Jul'
+
+###### MedianRent_August #####
+august <- craigslis[craigslis$month == 8,]
+MedianRent_Aug <- aggregate(price ~ CTID10, data=august, median)
+names(MedianRent_Aug)[1] <- 'CT_ID_10'
+names(MedianRent_Aug)[2] <- 'MedianRent_Aug'
+
+# Merging all months for median rent
+feb_march <- merge(MedianRent_Feb, MedianRent_Mar, by = "CT_ID_10", all = TRUE)
+april_may <- merge(MedianRent_Apr, MedianRent_May, by = "CT_ID_10", all = TRUE)
+june_july <- merge(MedianRent_Jun, MedianRent_Jul, by = "CT_ID_10", all = TRUE)
+feb_march_april_may <- merge(feb_march, april_may, by = "CT_ID_10", all = TRUE)
+feb_march_april_may_june_july <- merge(feb_march_april_may, june_july, by = "CT_ID_10", all = TRUE)
+all_months_rent <- merge(feb_march_april_may_june_july, MedianRent_Aug, by = "CT_ID_10", all = TRUE)
+
+# Merging all data together
+all <- merge(cross, all_months, by.x = 'CTID10', by.y = 'CT_ID_10', all = TRUE)
+names(all)[1] <- 'CT_ID_10'
+all <- merge(all, all_months_rent, by = 'CT_ID_10', all = TRUE)
+
+# Merging with state data, which contains all CT ID
+# Importing ACS_1418_TRACT dataset in order to have access to all CT ID in the state
+state <- read.csv("~/Desktop/ACS_1418_TRACT.csv", sep = ",", header = TRUE, stringsAsFactors=FALSE)
+all <- merge(state, all, by = "CT_ID_10", all = TRUE)
+all <- all[,-c(2:56)]
+names(all)[3] <- 'TOWN'
+# Replace NA values with 0 for numeric features
+all$ListingsFreq_Cross[is.na(all$ListingsFreq_Cross)] <- 0
+all$MedianRent_Cross[is.na(all$MedianRent_Cross)] <- 0
+all$ListingsFreq_Feb[is.na(all$ListingsFreq_Feb)] <- 0
+all$ListingsFreq_Mar[is.na(all$ListingsFreq_Mar)] <- 0
+all$ListingsFreq_Apr[is.na(all$ListingsFreq_Apr)] <- 0
+all$ListingsFreq_May[is.na(all$ListingsFreq_May)] <- 0
+all$ListingsFreq_Jun[is.na(all$ListingsFreq_Jun)] <- 0
+all$ListingsFreq_Jul[is.na(all$ListingsFreq_Jul)] <- 0
+all$ListingsFreq_Aug[is.na(all$ListingsFreq_Aug)] <- 0
+all$MedianRent_Feb[is.na(all$MedianRent_Feb)] <- 0
+all$MedianRent_Mar[is.na(all$MedianRent_Mar)] <- 0
+all$MedianRent_Apr[is.na(all$MedianRent_Apr)] <- 0
+all$MedianRent_May[is.na(all$MedianRent_May)] <- 0
+all$MedianRent_Jun[is.na(all$MedianRent_Jun)] <- 0
+all$MedianRent_Jul[is.na(all$MedianRent_Jul)] <- 0
+all$MedianRent_Aug[is.na(all$MedianRent_Aug)] <- 0
+# Checking for NA values
+colnames(all)[apply(is.na(all), 2, any)]
+
+library(dplyr)
+all <- all %>% select(CT_ID_10, ListingsFreq_Cross, MedianRent_Cross, ListingsFreq_Feb, ListingsFreq_Mar, ListingsFreq_Apr, ListingsFreq_May, ListingsFreq_Jun, ListingsFreq_Jul, ListingsFreq_Aug, MedianRent_Feb, MedianRent_Mar, MedianRent_Apr, MedianRent_May, MedianRent_Jun, MedianRent_Jul, MedianRent_Aug, TOWN, COUNTY)
+# Save as csv
+write.csv(all,"~/Desktop/CRAIGSLIST.CT.csv", row.names = FALSE)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
