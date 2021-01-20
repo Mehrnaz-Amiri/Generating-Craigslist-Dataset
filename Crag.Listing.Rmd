@@ -1,0 +1,95 @@
+
+
+```{r}
+craigslis <- read.csv("~/Desktop/craigslist_spjoined_8_17.csv", sep = ",", header = TRUE, stringsAsFactors=FALSE)
+craigslis
+```
+```{r}
+library(lubridate)
+time <- as.POSIXct(craigslis$post_dt,format="%Y-%m-%d %H:%M:%S",tz=Sys.timezone())
+craigslis$LISTING_TIME <- format(time, format="%H:%M:%S")
+craigslis$post_date <- as.Date(craigslis$post_dt ,format = "%Y-%m-%d %H:%M:%S", tz=Sys.timezone())
+craigslis$LISTING_MONTH  <- ifelse(month(ymd(craigslis$post_date)) == 02, 'February',
+                    ifelse(month(ymd(craigslis$post_date)) == 03, 'March',
+                    ifelse(month(ymd(craigslis$post_date)) == 04, 'April',
+                    ifelse(month(ymd(craigslis$post_date)) == 05, 'May',
+                    ifelse(month(ymd(craigslis$post_date)) == 06, 'June',
+                    ifelse(month(ymd(craigslis$post_date)) == 07,'July',
+                    ifelse(month(ymd(craigslis$post_date)) == 08, 'August',0)))))))
+craigslis$LISTING_DAY <- day(ymd(craigslis$post_date))
+craigslis$LISTING_DATE <- as.Date(craigslis$post_dt ,format = "%Y-%m-%d %H:%M:%S", tz=Sys.timezone())
+
+library(tidyverse)
+craigslis <- craigslis %>%
+  rename(LISTING_ID  = post_id,
+         RETRIEVED_ON = retrieved_on,
+         BODY = body,
+         PRICE = price,
+         AREA_SQFT = area_sqft,
+         ALLOWS_CATS = tag_allows_cats,
+         ALLOWS_DOGS = tag_allows_dogs,
+         ADDRESS = address_text,
+         LOCATION = location,
+         CT_ID_10 = CTID10)
+
+
+```
+
+●	PROPERTY_TYPE indicates what style of property is being listed. 
+o	Note: The styles are: AP for Apartment, AL for Assisted Living, CN for Condo, CT for Cottage, DX for Duplex, F for Flat, H for House, IL for In Law, LF for Loft, LN for Land, M for Manufactured, and TH for Town House.
+
+
+```{r}
+craigslis$PROPERTY_TYPE <- ifelse(craigslis$tag_is_apartment == 1, 'AP', ifelse(craigslis$tag_is_assisted_living == 1, 'AL',ifelse(craigslis$tag_is_condo == 1, 'CN',ifelse(craigslis$tag_is_cottage == 1, 'CT',ifelse(craigslis$tag_is_duplex == 1, 'DX',ifelse(craigslis$tag_is_flat == 1, 'F',ifelse(craigslis$tag_is_house == 1, 'H',ifelse(craigslis$tag_is_in_law == 1, 'IL',ifelse(craigslis$tag_is_loft == 1, 'LF',ifelse(craigslis$tag_is_manufactured == 1, 'M', 0))))))))))
+
+t <- craigslis[craigslis$tag_is_land == 1,] 
+View(t)
+table(t$tag_is_town_house)
+```
+●	LAUNDRY_TYPE indicates the style of laundry amenities provided at the listed property. 
+o	Note: The styles are: HOOKUP, IN BUILDING, IN UNIT, NONE, and ON SITE. 
+
+```{r}
+craigslis$LAUNDRY_TYPE <- ifelse(craigslis$tag_laundry_hookup == 1, 'HOOKUP',
+                          ifelse(craigslis$tag_laundry_in_building == 1, 'IN BUILDING',
+                          ifelse(craigslis$tag_laundry_in_unit == 1, 'IN UNIT',
+                          ifelse(craigslis$tag_laundry_none == 1, 'NONE',
+                          ifelse(craigslis$tag_laundry_on_site == 1, 'ON SITE', 0)))))
+
+
+# g <- craigslis[craigslis$tag_laundry_on_site == 1,]
+
+```
+●	PARKING_TYPE indicates the style of parking amenities provided at the listed property.
+o	Note: The styles are: ATTACHED, CARPORT, DETACHED, NONE, OFFSTREET, ONSTREET, and VALET.
+
+
+```{r}
+craigslis$PARKING_TYPE <- ifelse(craigslis$tag_parking_attached == 1, 'ATTACHED',
+                          ifelse(craigslis$tag_parking_carport == 1, 'CARPORT',
+                          ifelse(craigslis$tag_parking_detached == 1, 'DETACHED',
+                          ifelse(craigslis$tag_parking_none == 1, 'NONE',
+                          ifelse(craigslis$tag_parking_offstreet == 1, 'OFFSTREET',
+                          ifelse(craigslis$tag_parking_onstreet == 1, 'ONSTREET',
+                          ifelse(craigslis$tag_parking_valet == 1, 'VALET',0)))))))
+# p <- craigslis[craigslis$tag_parking_onstreet ==1,] 
+
+craigslis <- craigslis %>% select(LISTING_ID, LISTING_MONTH, LISTING_DAY, LISTING_TIME, RETRIEVED_ON, BODY, PRICE, 
+                                  AREA_SQFT, ALLOWS_CATS, ALLOWS_DOGS, ADDRESS, LOCATION, CT_ID_10)
+
+table(craigslis$LISTING_MONTH)
+write.csv(craigslis,"~/Desktop/CRAIGSLIST.Listings.csv", row.names = FALSE)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
